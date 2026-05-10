@@ -2,11 +2,12 @@ package service
 
 import (
 	"fmt"
-	"github.com/ashishjuyal/banking-auth/domain"
-	"github.com/ashishjuyal/banking-auth/dto"
-	"github.com/ashishjuyal/banking-lib/errs"
-	"github.com/ashishjuyal/banking-lib/logger"
+
 	"github.com/dgrijalva/jwt-go"
+	"github.com/meSATYA/jwt-auth-server/domain"
+	"github.com/meSATYA/jwt-auth-server/dto"
+	"github.com/meSATYA/wowgoapi-lib/errs"
+	"github.com/meSATYA/wowgoapi-lib/logger"
 )
 
 type AuthService interface {
@@ -35,9 +36,9 @@ func (s DefaultAuthService) Refresh(request dto.RefreshTokenRequest) (*dto.Login
 			}
 			return &dto.LoginResponse{AccessToken: accessToken}, nil
 		}
-		return nil, errs.NewAuthenticationError("invalid token")
+		return nil, errs.CustomAuthenticationError("invalid token")
 	}
-	return nil, errs.NewAuthenticationError("cannot generate a new access token until the current one expires")
+	return nil, errs.CustomAuthenticationError("cannot generate a new access token until the current one expires")
 }
 
 func (s DefaultAuthService) Login(req dto.LoginRequest) (*dto.LoginResponse, *errs.AppError) {
@@ -66,7 +67,7 @@ func (s DefaultAuthService) Login(req dto.LoginRequest) (*dto.LoginResponse, *er
 func (s DefaultAuthService) Verify(urlParams map[string]string) *errs.AppError {
 	// convert the string token to JWT struct
 	if jwtToken, err := jwtTokenFromString(urlParams["token"]); err != nil {
-		return errs.NewAuthorizationError(err.Error())
+		return errs.CustomAuthorizationError(err.Error())
 	} else {
 		/*
 		   Checking the validity of the token, this verifies the expiry
@@ -80,17 +81,17 @@ func (s DefaultAuthService) Verify(urlParams map[string]string) *errs.AppError {
 			*/
 			if claims.IsUserRole() {
 				if !claims.IsRequestVerifiedWithTokenClaims(urlParams) {
-					return errs.NewAuthorizationError("request not verified with the token claims")
+					return errs.CustomAuthorizationError("request not verified with the token claims")
 				}
 			}
 			// verify of the role is authorized to use the route
 			isAuthorized := s.rolePermissions.IsAuthorizedFor(claims.Role, urlParams["routeName"])
 			if !isAuthorized {
-				return errs.NewAuthorizationError(fmt.Sprintf("%s role is not authorized", claims.Role))
+				return errs.CustomAuthorizationError(fmt.Sprintf("%s role is not authorized", claims.Role))
 			}
 			return nil
 		} else {
-			return errs.NewAuthorizationError("Invalid token")
+			return errs.CustomAuthorizationError("Invalid token")
 		}
 	}
 }

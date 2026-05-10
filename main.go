@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/ashishjuyal/banking-auth/app"
+	"github.com/meSATYA/jwt-auth-server/app"
 )
 
 func main() {
